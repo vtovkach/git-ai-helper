@@ -5,6 +5,12 @@ import openai
 from git import Repo 
 from dataclasses import dataclass 
 
+# Get current repository 
+REPO = Repo(".")
+
+# List with stored Git_Commit objects 
+COMMITS = [] 
+
 @dataclass 
 class Git_Commit:
     file_path:      str 
@@ -12,13 +18,7 @@ class Git_Commit:
     commit_type:    str 
     commit_msg:     str
 
-# Get 
-REPO = Repo(".")
-
-# List to store Git_Commit objects 
-COMMITS = [] 
-
-def gita_inspect():  
+def gita_inspect(): 
 
     # Check if COMMITS Empty 
     # If not, ask user to delete all previous commits from gita 
@@ -50,15 +50,24 @@ def gita_inspect():
         # Append commit to the list 
         COMMITS.append(commit)
 
-        return 
+    return 
     
 def gita_show():
 
-    print(len(COMMITS))
+    print(f"{'File #':<6} {'Status':<10} {'File':<20}")
+    print("-" * 40)
+
     for index, commit in enumerate(COMMITS):
-        print(f"{index} {commit.commit_type} {commit.file_path}")
+        print(f"{index:<6} {commit.commit_type:<10} {commit.file_path:<20}")
 
     return 
+
+
+def gita_commit(usr_input : str):
+    # Stage and commit all              commit -a 
+    # Stage and commit certain file     commit -s {file #}
+    # TODO 
+    1 + 1 
     
 def main():
 
@@ -74,12 +83,19 @@ def main():
         
         elif usr_input == "commit":
             print("commiting")
+
         elif usr_input == "push":
             print("pushing")
+
         elif usr_input == "exit":
             break
+
+        elif usr_input == "clear":
+            os.system('clear')
+
         else:
-            print("no such command")
+            print("No such command")
+
 
 
 # Run GITA 
