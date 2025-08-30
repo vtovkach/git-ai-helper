@@ -1,103 +1,118 @@
+# import openai API 
+from openai import OpenAI, AsyncOpenAI
+# import git API 
+from git import Repo
 
-import subprocess
+# import other neccessary libaries 
 import os 
-import openai
-from git import Repo 
-from dataclasses import dataclass 
+import subprocess
+from dataclasses import dataclass
+from enum import Enum
 
-# Get current repository 
-REPO = Repo(".")
+# retrive Openai API Key from the file  
+with open("api_key", "r") as f:
+        api_key = f.read().strip()
 
-# List with stored Git_Commit objects 
-COMMITS = [] 
+# Initialize OpenAi client with the key 
+client = OpenAI(api_key=api_key)
+
+# Here is the logic of the program 
+#   - set up file entity 
+#   - set up display area
+#   - set up gita staging area 
+#   
+
+# Path to the current working directory  
+repo = os.getcwd()
+
+InitialArea = []
+StagingArea = []
+
+class AreaType(Enum):
+    InitialArea = 1
+    StaginArea = 2     
 
 @dataclass 
-class Git_Commit:
-    file_path:      str 
-    diff:           str 
-    commit_type:    str 
-    commit_msg:     str
-
-def gita_inspect(): 
-
-    # Check if COMMITS Empty 
-    # If not, ask user to delete all previous commits from gita 
-    # TODO 
-
-    # Get unstaged files info 
-    status_lines = REPO.git.status("--porcelain").splitlines()
-
-    for line in status_lines:
+class File:
+        file_path:   str
+        file_name:   str
+        file_diff:   str 
+        commit_msg:  str 
+        type:        str # modified, staged, untracked 
+        isProcessed: bool 
         
-        # Get status code 
-        status = line[: 2].strip()
-
-        # Resolve untracked files 
-        if status == "??":
-            status = "Untracked"
-
-        # Get path 
-        path = line[3:].strip()
-
-        # Initialize object of type Git_Commit 
-        commit = Git_Commit(
-            file_path = path, 
-            diff = "",
-            commit_type = status,
-            commit_msg = ""
-        )
-
-        # Append commit to the list 
-        COMMITS.append(commit)
-
-    return 
-    
-def gita_show():
-
-    print(f"{'File #':<6} {'Status':<10} {'File':<20}")
-    print("-" * 40)
-
-    for index, commit in enumerate(COMMITS):
-        print(f"{index:<6} {commit.commit_type:<10} {commit.file_path:<20}")
-
-    return 
-
-
-def gita_commit(usr_input : str):
-    # Stage and commit all              commit -a 
-    # Stage and commit certain file     commit -s {file #}
-    # TODO 
-    1 + 1 
-    
 def main():
 
-    while(True):
+    # Eximine repository for all altered files
+    exam_repo()
 
-        usr_input = input("gita :> ")
+    print("=====================================================")
+    print("    Welcome to GITA (Git Assistant Tool)")
+    print("")
+    print("    An AI-powered tool to help you craft, manage,")
+    print("    and streamline Git commits with ease.")
+    print("")
+    print("    © 2025 Vadym — MIT License")
+    print("=====================================================")
 
-        if usr_input == "inspect":
-            gita_inspect()
+    while True:
+        user_input = input("(gita) ")
 
-        elif usr_input == "show":
-            gita_show()
-        
-        elif usr_input == "commit":
-            print("commiting")
-
-        elif usr_input == "push":
-            print("pushing")
-
-        elif usr_input == "exit":
+        if user_input == "exit":
             break
-
-        elif usr_input == "clear":
-            os.system('clear')
-
+        elif user_input == "exam":
+            exam_repo()
+        elif user_input == "disp -i":
+            displayArea()
+        elif user_input == "disp -s":
+            displayArea()
         else:
-            print("No such command")
+            continue
+    
+def exam_repo():
+    pass 
+    # exam_repo routine     
 
+    # Get a list of staged files
+    # Get a list of Modified files 
+    # Get a list of untracked files 
+
+def process_repo():
+    pass 
+    # generate all commit messages 
+
+def displayArea():
+    pass
+    # function will display either InitialArea or StaginArea 
+    # argument will specify what Area to display 
+
+def addFile():
+    pass
+    # The function will add specific file into the AreaType List 
+
+def removeFile():
+    pass 
+    # The function will remove specific file from the AreaType List 
+
+def commitStagingArea():
+    pass 
+    # this routine will commit all files in the staging area 
 
 
 # Run GITA 
 if __name__ == "__main__":
-    main()
+       main()
+
+
+'''''
+#### Usage Example ####
+
+response = client.chat.completions.create(
+        model="gpt-4.1-mini",
+        messages=[
+                {"role": "system", "content": "You are my assistant."},
+                {"role": "user", "content": "What is the Green's Theorem"}
+        ]
+)
+print(response.choices[0].message.content)
+'''''
