@@ -1,8 +1,9 @@
 # import openai API 
-from openai import OpenAI, AsyncOpenAI
+from openai import OpenAI, AsyncOpenAI 
 # import git API 
-from git import Repo
+import git 
 
+from colorama import Fore, Style
 # import other neccessary libaries 
 import os 
 import subprocess
@@ -16,14 +17,8 @@ with open("api_key", "r") as f:
 # Initialize OpenAi client with the key 
 client = OpenAI(api_key=api_key)
 
-# Here is the logic of the program 
-#   - set up file entity 
-#   - set up display area
-#   - set up gita staging area 
-#   
-
 # Path to the current working directory  
-repo = os.getcwd()
+repo = git.Repo(".")
 
 InitialArea = []
 StagingArea = []
@@ -34,16 +29,16 @@ class AreaType(Enum):
 
 @dataclass 
 class File:
-        file_path:   str
-        file_name:   str
-        file_diff:   str 
-        commit_msg:  str 
-        type:        str # modified, staged, untracked 
-        isProcessed: bool 
+        file_path:    str
+        file_name:    str
+        file_diff:    str 
+        commit_msg:   str 
+        file_status:  str # modified, staged, untracked 
+        isProcessed:  bool 
         
 def main():
 
-    # Eximine repository for all altered files
+    # Eximine git repository for changes 
     exam_repo()
 
     print("=====================================================")
@@ -60,31 +55,67 @@ def main():
 
         if user_input == "exit":
             break
-        elif user_input == "exam":
-            exam_repo()
-        elif user_input == "disp -i":
-            displayArea()
-        elif user_input == "disp -s":
-            displayArea()
+        elif user_input == "disp":
+             displayInitArea()
+        elif user_input == "proc":
+             process_repo()
         else:
             continue
     
 def exam_repo():
-    pass 
-    # exam_repo routine     
+    """
+    Examines the current Git repository for changes.
 
-    # Get a list of staged files
-    # Get a list of Modified files 
-    # Get a list of untracked files 
+    This function uses `git status --porcelain` to detect all files
+    that have been altered compared to HEAD (e.g., untracked, modified,
+    staged, deleted, renamed, conflicted). For each file entry:
+
+        - Extracts the Git status code (e.g., "M", "A", "D", "??").
+        - Extracts the file path and file name.
+        - Creates a `File` dataclass instance with metadata placeholders
+          (diff = "", commit_msg = "", isProcessed = False).
+        - Appends the instance to the global `InitialArea` list.
+    """
+
+    entries = repo.git.status("--porcelain").splitlines()
+
+    for entry in entries:
+        status_code = entry[:2].strip()
+        path = entry[3:]
+
+        temp_file = File(
+             file_path = path,
+             file_name = os.path.basename(path),
+             file_diff = "",
+             commit_msg = "",
+             file_status = status_code,
+             isProcessed = False
+        )
+
+        InitialArea.append(temp_file)
+
+    return 0; 
 
 def process_repo():
     pass 
     # generate all commit messages 
 
-def displayArea():
-    pass
-    # function will display either InitialArea or StaginArea 
-    # argument will specify what Area to display 
+def displayInitArea():
+    print(Fore.CYAN + "┌───┬─────┬──────────────────────────────────────────────┬────────────┐" + Style.RESET_ALL)
+    print(Fore.CYAN + f"│{'No.':<3}│{'Code':<5}│{'File Path':<46}│{'State':<12}│" + Style.RESET_ALL)
+    print(Fore.CYAN + "├───┼─────┼──────────────────────────────────────────────┼────────────┤" + Style.RESET_ALL)
+
+    counter = 1
+    for file in InitialArea:
+        if(file.isProcessed):  
+            print(f"│{counter:<3}│{file.file_status:<5}│{file.file_path:<46}│{Fore.GREEN}processed   {Style.RESET_ALL}│")
+        else:
+            print(f"│{counter:<3}│{file.file_status:<5}│{file.file_path:<46}│{Fore.RED}unprocessed {Style.RESET_ALL}│")
+
+        counter += 1
+
+    print(Fore.CYAN + "└───┴─────┴──────────────────────────────────────────────┴────────────┘" + Style.RESET_ALL)
+
 
 def addFile():
     pass
