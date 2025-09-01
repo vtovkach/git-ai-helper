@@ -65,11 +65,7 @@ def main() -> None:
         # Get user input 
         user_input = input("(gita) ")
 
-        if user_input == "exit":
-            repo.git.reset()
-            break
-
-        parts = user_input.split()      # split by spaces 
+        parts = user_input.split()     # split by spaces 
         cmd = parts[0]
         args = [arg.lstrip("-") for arg in parts[1:]]
 
@@ -84,7 +80,7 @@ def main() -> None:
                     # display commit message for the specific file
                     try:
                         file_num = int(args[0][1:])
-                    except ValueError:
+                    except (ValueError, IndexError, TypeError):
                         print(" File number is invalid")
                         continue
                     displayCommitMsg(False, file_num)
@@ -94,13 +90,61 @@ def main() -> None:
                 print("Undefined options in \"{cmd}\" command. Try \"help\"") 
                 
         elif cmd == "redo":
-            pass 
+            if len(args) == 2:
+                if args[0] == "cmg":
+                    try:
+                        option = args[1][0]
+                    except IndexError:
+                        print("Undefined options in \"{cmd}\" command. Try \"help\"")
+                        continue
+                    if option == "f":
+                        try:
+                            file_number = args[1][1:]
+                        except (IndexError, ValueError, TypeError):
+                            print("Undefined options in \"{cmd}\" command. Try \"help\"")
+                            continue
+                        redoCommitMsg(True, file_number)
+                    else:
+                        print("Undefined options in \"{cmd}\" command. Try \"help\"")
+                        continue
+                elif args[0] == "cmo":
+                    try:
+                        option = args[1][0]
+                    except IndexError:
+                        print("Undefined options in \"{cmd}\" command. Try \"help\"")
+                        continue
+                    if option == "f":
+                        try:
+                            file_number = args[1][1:]
+                        except (IndexError, ValueError, TypeError):
+                            print("Undefined options in \"{cmd}\" command. Try \"help\"")
+                            continue
+                        redoCommitMsg(False, file_number)
+                    else:
+                        print("Undefined options in \"{cmd}\" command. Try \"help\"")
+                        continue
+                else:
+                    print("Undefined options in \"{cmd}\" command. Try \"help\"")
+            else:
+                print("Undefined options in \"{cmd}\" command. Try \"help\"") 
+
         elif cmd == "commit":
-            pass
+            if len(args) == 1 and args[0] == "a":
+                    commitFiles(True, args)
+            else:
+                commitFiles(False, args)
+        
         elif cmd == "uncommit":
             pass 
+        
         elif cmd == "clear":
             os.system("clear")
+        
+        elif cmd == "exit":
+            # Unstage all files from the current commit
+            # Restores them to the state they were in before running 'gita'
+            repo.git.reset()                    
+            break
         else:
             print(f"Undefined command: \"{user_input}\". Try \"help\"")
             continue
@@ -173,7 +217,7 @@ def getDiff(filepath: str) -> str:
     return diff 
 
 def getCommitMsg(file: File, isCreative: bool) -> str:
-    temperature = 0 if not isCreative else 1
+    temperature = 0 if not isCreative else 1.5
 
     commit_msg = client.chat.completions.create(
         model="gpt-4.1-nano",
@@ -217,8 +261,8 @@ def displayCommitMsg(display_all: bool, file_number: int) -> None:
 
     else:
         try:
-            target_file = GitaStaginArea[file_number - 1]
-        except IndexError:
+            target_file = GitaStaginArea[int(file_number) - 1]
+        except (IndexError, ValueError, TypeError):
             print(f"File {file_number} does not exist!")
             return
         
@@ -236,28 +280,78 @@ def displayCommitMsg(display_all: bool, file_number: int) -> None:
 
     return
 
+def redoCommitMsg(reuse_ai: bool, file_number: int) -> None:
+    # Validate provided file_number     
+    try:
+        target_file = GitaStaginArea[int(file_number) - 1]
+    except (IndexError, ValueError, TypeError) :
+        print(f"File {file_number} does not exist!")
+        return
+    
+    # Determine whether to regenerate message with openai gpt or provide own message 
+    if(reuse_ai):
+        while True:
+            target_file.commit_msg = getCommitMsg(target_file, True)
+            displayCommitMsg(False, file_number)
+            user_input = input("Would you like to save this commit message?(y/n)")
+            if user_input.lower() == "y":
+                print("Commit message has been successfully updated!\n")
+                break; 
+            print("Wait please. Generating a new commit message.")
+    else:
+        target_file.commit_msg = input("Enter your commit message: ")
+        print("Commit message has been successfully updated!\n")
+
+    return
+
+
+def commitFiles(commit_all: bool, args: list[str]) -> None:
+
+    file_numbers = []
+
+    for arg in args: 
+        if arg[0] == "f":
+            try:
+                file_numbers.append(int(arg[1:]))
+            except (IndexError, TypeError, ValueError):
+                print(f"Error accessing provided file number.")
+                break
+        else:
+            print("Undefined options in \"commit\" command. Try \"help\"") 
+            
+    if commit_all == True:
+        for file in GitaStaginArea:
+            try:
+                # Comment for now 
+                #repo.git.commit(file.file_path, m=file.commit_msg)
+                file.isCommited = True
+                print(f"{file.file_path} has been successfully committed. ✅ done!")
+            except Exception as e:
+                print(f"{file.file_path} has not been committed due to error. ❌ failed! ({e})")
+    
+    else:
+        for file_num in file_numbers:
+            print(f"Commit file with the following number: {file_num}")
+    
+    return
+
 # Run GITA 
 if __name__ == "__main__":
     main()
 
 
 # Add the following functunality:
-#   - display commit message 
-#   - 
-#   - add posibility to redo commit message 
-#       - allow user to use their own messages 
-#       - or request new message from ai  
-#       - 
 #   - commit changes 
 #       - commit all at once 
 #       - commit certain file
-#       - 
-#   - remove commit from 'ready to commit' 
-#   
+#        
+#   - undo commits
+#  
 
 # Other things to do 
 #   - Error handling 
 #   - Improve ai prompt for better git commit message       !!! DONE !!!
 #   - Handle git divergences                                
 #   - Speed up chatgpt requests 
-
+#   - Refactor functions 
+#
