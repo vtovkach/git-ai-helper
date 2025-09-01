@@ -129,8 +129,10 @@ def main() -> None:
                 print("Undefined options in \"{cmd}\" command. Try \"help\"") 
 
         elif cmd == "commit":
-            if len(args) == 1 and args[0] == "a":
-                    commitFiles(True, args)
+            if len(GitaStaginArea) == 0:
+                print("Staging area is empty. Nothing to commit.")
+            elif len(args) == 1 and args[0] == "a":
+                commitFiles(True, args)
             else:
                 commitFiles(False, args)
         
