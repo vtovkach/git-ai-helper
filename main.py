@@ -29,7 +29,26 @@ class File:
         
 def main() -> None:
 
-    print("=====================================================")
+    # disp 
+    #   -none       -> display staging area 
+    #   -f<file #>   -> display commit message for the selected file 
+    #   -a          -> display message for every file 
+    #   
+    # redo 
+    #   -cmg -f<file #>      -> use gita to regenerate commit message 
+    #   -cmo -f<file #>      -> enter user's commit message manually 
+    # 
+    # commit 
+    #   -a              -> commit all files 
+    #   -<file #>       -> commit selected file
+    # 
+    # uncommit   
+    #   -a              -> remove all files 
+    #   -<file #> 
+    #
+    # !!! Once something is removed redisplay all files
+
+    print("\n=====================================================")
     print("    Welcome to GITA (Git Assistant Tool)")
     print("")
     print("    An AI-powered tool to help you craft, manage,")
@@ -47,13 +66,41 @@ def main() -> None:
         user_input = input("(gita) ")
 
         if user_input == "exit":
-            # Unstage all uncommited files 
             repo.git.reset()
             break
 
-        elif user_input == "disp":
-            displayInitArea()
+        parts = user_input.split()      # split by spaces 
+        cmd = parts[0]
+        args = [arg.lstrip("-") for arg in parts[1:]]
 
+        if cmd == "disp":
+            if len(args) == 0:
+                displayInitArea()
+            elif len(args) == 1:
+                if args[0] == "a":
+                    # display commit message for every file 
+                    displayCommitMsg(True, -1)
+                elif args[0][0] == "f":
+                    # display commit message for the specific file
+                    try:
+                        file_num = int(args[0][1:])
+                    except ValueError:
+                        print(" File number is invalid")
+                        continue
+                    displayCommitMsg(False, file_num)
+                else:
+                    print("Undefined options in \"{cmd}\" command. Try \"help\"") 
+            else:
+                print("Undefined options in \"{cmd}\" command. Try \"help\"") 
+                
+        elif cmd == "redo":
+            pass 
+        elif cmd == "commit":
+            pass
+        elif cmd == "uncommit":
+            pass 
+        elif cmd == "clear":
+            os.system("clear")
         else:
             print(f"Undefined command: \"{user_input}\". Try \"help\"")
             continue
@@ -118,67 +165,14 @@ def displayInitArea() -> None:
         counter += 1
 
     return None
-    
-
-
-'''''
-def displayInitArea() -> None:
-    # Column widths
-    no_width      = 3
-    code_width    = 6
-    path_width    = max(20, max(len(file.file_path) for file in GitaStaginArea))
-    ready_width   = 7
-    commit_width  = 9
-    push_width    = 7
-
-    # Top border
-    print(Fore.CYAN + "┌───┬──────┬" + "─" * path_width +
-          "┬" + "─" * ready_width +
-          "┬" + "─" * commit_width +
-          "┬" + "─" * push_width + "┐" + Style.RESET_ALL)
-
-    # Header row
-    print(Fore.CYAN +
-          f"│{'No.':<{no_width}}│{'Status':<{code_width}}│{'File Path':<{path_width}}│"
-          f"{'Ready':<{ready_width}}│{'Committed':<{commit_width}}│{'Pushed':<{push_width}}│"
-          + Style.RESET_ALL)
-
-    # Separator
-    print(Fore.CYAN + "├───┼──────┼" + "─" * path_width +
-          "┼" + "─" * ready_width +
-          "┼" + "─" * commit_width +
-          "┼" + "─" * push_width + "┤" + Style.RESET_ALL)
-
-    # Data rows
-    counter = 1
-    for file in GitaStaginArea:
-        ready    = f"{Fore.GREEN}True {Style.RESET_ALL}" if file.isReady    else f"{Fore.RED}False{Style.RESET_ALL}"
-        commited = f"{Fore.GREEN}True {Style.RESET_ALL}" if file.isCommited else f"{Fore.RED}False{Style.RESET_ALL}"
-        pushed   = f"{Fore.GREEN}True {Style.RESET_ALL}" if file.isPushed   else f"{Fore.RED}False{Style.RESET_ALL}"
-
-        print(f"│{counter:<{no_width}}│{file.file_status:<{code_width}}│{file.file_path:<{path_width}}│"
-              f"{ready:<{ready_width}}│{commited:<{commit_width}}│{pushed:<{push_width}}│")
-        counter += 1
-
-    # Bottom border
-    print(Fore.CYAN + "└───┴──────┴" + "─" * path_width +
-          "┴" + "─" * ready_width +
-          "┴" + "─" * commit_width +
-          "┴" + "─" * push_width + "┘" + Style.RESET_ALL)
-    
-    return None 
-'''''
 
 def getDiff(filepath: str) -> str:
-
     # get file changes with 5 context lines  
     diff = repo.git.diff("--cached", "-U2", filepath)
 
     return diff 
 
-
 def getCommitMsg(file: File, isCreative: bool) -> str:
-
     temperature = 0 if not isCreative else 1
 
     commit_msg = client.chat.completions.create(
@@ -203,6 +197,45 @@ def getCommitMsg(file: File, isCreative: bool) -> str:
     return commit_msg.choices[0].message.content.strip()
 
 
+def displayCommitMsg(display_all: bool, file_number: int) -> None:
+
+    if display_all == True:
+        counter = 1
+        for file in GitaStaginArea:
+            print() # empty line before 
+            header = (
+                f"{Fore.CYAN}"
+                f"{'=' * 20} COMMIT MESSAGE FOR FILE {counter} "
+                f"({file.file_path}) "
+                f"{'=' * 20}{Style.RESET_ALL}"
+            )
+            print(header)
+            # Commit message in bright green
+            print(Fore.GREEN + file.commit_msg + Style.RESET_ALL + "\n")
+
+            counter += 1
+
+    else:
+        try:
+            target_file = GitaStaginArea[file_number - 1]
+        except IndexError:
+            print(f"File {file_number} does not exist!")
+            return
+        
+        print()  # empty line before
+        header = (
+            f"{Fore.CYAN}"
+            f"{'=' * 20} COMMIT MESSAGE FOR FILE {file_number} "
+            f"({target_file.file_path}) "
+            f"{'=' * 20}{Style.RESET_ALL}"
+        )
+        print(header)
+
+        # Commit message in bright green
+        print(Fore.GREEN + target_file.commit_msg + Style.RESET_ALL + "\n")
+
+    return
+
 # Run GITA 
 if __name__ == "__main__":
     main()
@@ -211,7 +244,7 @@ if __name__ == "__main__":
 # Add the following functunality:
 #   - display commit message 
 #   - 
-#   - redo commit message 
+#   - add posibility to redo commit message 
 #       - allow user to use their own messages 
 #       - or request new message from ai  
 #       - 
