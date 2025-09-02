@@ -325,7 +325,7 @@ def commitFiles(commit_all: bool, args: list[str]) -> None:
         for file in GitaStaginArea:
             try:
                 # Comment for now 
-                #repo.git.commit(file.file_path, m=file.commit_msg)
+                repo.git.commit(file.file_path, m=file.commit_msg)
                 file.isCommited = True
                 print(f"{file.file_path} has been successfully committed. ✅ done!")
             except Exception as e:
@@ -333,7 +333,13 @@ def commitFiles(commit_all: bool, args: list[str]) -> None:
     
     else:
         for file_num in file_numbers:
-            print(f"Commit file with the following number: {file_num}")
+            try:
+                target_file = GitaStaginArea[file_num - 1]
+                repo.git.commit(target_file.file_path, m=target_file.commit_msg)
+                target_file.isCommited = True
+                print(f"{target_file.file_path} has been successfully committed. ✅ Done!") 
+            except IndexError:
+                print(f"File {file_num} does not exist! Commit failed! ❌")
     
     return
 
