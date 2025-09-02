@@ -343,10 +343,6 @@ if __name__ == "__main__":
 
 
 # Add the following functunality:
-#   - commit changes 
-#       - commit all at once 
-#       - commit certain file
-#        
 #   - undo commits
 #  
 
