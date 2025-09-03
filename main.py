@@ -15,7 +15,6 @@ client = OpenAI(api_key=api_key)
 repo = git.Repo(".")
 
 GitaStaginArea = []   
-committedChanges = 0
 
 @dataclass 
 class File:
@@ -133,19 +132,13 @@ def main() -> None:
             if len(GitaStaginArea) == 0:
                 print("Staging area is empty. Nothing to commit.")
             elif len(args) == 1 and args[0] == "a":
-                commitRoutine(True, args)
+                commitFiles(True, args)
             else:
-                commitRoutine(False, args)
+                commitFiles(False, args)
         
         elif cmd == "uncommit":
-            if committedChanges == 0:
-                branch = repo.active_branch
-                print(f"'{branch.name}' matches 'origin/{branch.name}'. Nothing to uncommit.")
-            elif len(args) == 1 and args[0] == "a":
-                uncommitRoutine(True, args)
-            else:
-                uncommitRoutine(False, args)
-
+            pass 
+        
         elif cmd == "clear":
             os.system("clear")
         
@@ -313,19 +306,21 @@ def redoCommitMsg(reuse_ai: bool, file_number: int) -> None:
 
     return
 
-def commitRoutine(commit_all: bool, args: list[str]) -> None:
-    global committedChanges
+
+def commitFiles(commit_all: bool, args: list[str]) -> None:
+
     file_numbers = []
 
-    for arg in args: 
-        if arg[0] == "f":
-            try:
-                file_numbers.append(int(arg[1:]))
-            except (IndexError, TypeError, ValueError):
-                print(f"Error accessing provided file number.")
-                break
-        else:
-            print("Undefined options in \"commit\" command. Try \"help\"") 
+    if commit_all == False:
+        for arg in args: 
+            if arg[0] == "f":
+                try:
+                    file_numbers.append(int(arg[1:]))
+                except (IndexError, TypeError, ValueError):
+                    print(f"Error accessing provided file number.")
+                    break
+            else:
+                print("Undefined options in \"commit\" command. Try \"help\"") 
             
     if commit_all == True:
         for file in GitaStaginArea:
@@ -336,9 +331,6 @@ def commitRoutine(commit_all: bool, args: list[str]) -> None:
                 print(f"{file.file_path} has been successfully committed. ✅ done!")
             except Exception as e:
                 print(f"{file.file_path} has not been committed due to error. ❌ failed! ({e})")
-                continue
-
-            committedChanges += 1
     
     else:
         for file_num in file_numbers:
@@ -349,14 +341,8 @@ def commitRoutine(commit_all: bool, args: list[str]) -> None:
                 print(f"{target_file.file_path} has been successfully committed. ✅ Done!") 
             except IndexError:
                 print(f"File {file_num} does not exist! Commit failed! ❌")
-                continue
-
-            committedChanges += 1
+    
     return
-
-def uncommitRoutine(uncommit_all: bool, args: list[str]) -> None:
-    print("I am in uncommit routine!\n")
-
 
 # Run GITA 
 if __name__ == "__main__":
@@ -365,7 +351,7 @@ if __name__ == "__main__":
 
 # Add the following functunality:
 #   - undo commits
-#  
+#
 
 # Other things to do 
 #   - Error handling 
