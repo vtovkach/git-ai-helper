@@ -324,24 +324,29 @@ def commitFiles(commit_all: bool, args: list[str]) -> None:
             
     if commit_all == True:
         for file in GitaStaginArea:
-            try:
-                # Comment for now 
-                repo.git.commit(file.file_path, m=file.commit_msg)
-                file.isCommited = True
-                print(f"{file.file_path} has been successfully committed. ✅ done!")
-            except Exception as e:
-                print(f"{file.file_path} has not been committed due to error. ❌ failed! ({e})")
+            if file.isCommited:
+                continue
+            else:
+                try:
+                    # Comment for now 
+                    repo.git.commit(file.file_path, m=file.commit_msg)
+                    file.isCommited = True
+                    print(f"{file.file_path} has been successfully committed. ✅ done!")
+                except Exception as e:
+                    print(f"{file.file_path} has not been committed due to error. ❌ failed! ({e})")
     
     else:
         for file_num in file_numbers:
-            try:
-                target_file = GitaStaginArea[file_num - 1]
-                repo.git.commit(target_file.file_path, m=target_file.commit_msg)
-                target_file.isCommited = True
-                print(f"{target_file.file_path} has been successfully committed. ✅ Done!") 
-            except IndexError:
-                print(f"File {file_num} does not exist! Commit failed! ❌")
-    
+            target_file = GitaStaginArea[file_num - 1]
+            if target_file.isCommited:
+                continue
+            else:
+                try:
+                    repo.git.commit(target_file.file_path, m=target_file.commit_msg)
+                    target_file.isCommited = True
+                    print(f"{target_file.file_path} has been successfully committed. ✅ Done!") 
+                except IndexError:
+                    print(f"File {file_num} does not exist! Commit failed! ❌")
     return
 
 # Run GITA 
@@ -351,7 +356,9 @@ if __name__ == "__main__":
 
 # Add the following functunality:
 #   - undo commits
+#   - push commits 
 #
+
 
 # Other things to do 
 #   - Error handling 
@@ -360,3 +367,6 @@ if __name__ == "__main__":
 #   - Speed up chatgpt requests 
 #   - Refactor functions 
 #
+#   Bugs
+#       - '-f<zero or negative number>'
+#     
