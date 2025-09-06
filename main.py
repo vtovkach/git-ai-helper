@@ -16,6 +16,8 @@ repo = git.Repo(".")
 
 GitaStaginArea = []   
 
+committedFiles = []
+
 @dataclass 
 class File:
     file_path:    str
@@ -129,6 +131,9 @@ def main() -> None:
                 print("Undefined options in \"{cmd}\" command. Try \"help\"") 
 
         elif cmd == "commit":
+            if len(args) == 0:
+                print("Undefined options in \"{cmd}\" command. Try \"help\"") 
+                continue; 
             if len(GitaStaginArea) == 0:
                 print("Staging area is empty. Nothing to commit.")
             elif len(args) == 1 and args[0] == "a":
@@ -325,6 +330,7 @@ def commitFiles(commit_all: bool, args: list[str]) -> None:
     if commit_all == True:
         for file in GitaStaginArea:
             if file.isCommited:
+                print(f"File {file.file_path} is already committed.")
                 continue
             else:
                 try:
@@ -337,8 +343,13 @@ def commitFiles(commit_all: bool, args: list[str]) -> None:
     
     else:
         for file_num in file_numbers:
-            target_file = GitaStaginArea[file_num - 1]
+            try:
+                target_file = GitaStaginArea[file_num - 1]
+            except (IndexError):
+                print(f"File {file_num} does not exist!")
+                continue
             if target_file.isCommited:
+                print(f"File {target_file.file_path} is already committed.")
                 continue
             else:
                 try:
@@ -367,6 +378,6 @@ if __name__ == "__main__":
 #   - Speed up chatgpt requests 
 #   - Refactor functions 
 #
+#
 #   Bugs
 #       - '-f<zero or negative number>'
-#     
