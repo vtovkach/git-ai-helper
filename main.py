@@ -387,11 +387,11 @@ if __name__ == "__main__":
 #
 
 # Other things to do 
-#   - Error handling 
-#   - Improve ai prompt for better git commit message       !!! DONE !!!
+#   - Error handling for openai requests 
+#   - Improve ai prompt for better git commit message     
 #   - Handle git divergences                                
 #   - Speed up chatgpt requests 
-#   - Refactor functions 
+#   - !!! Refactor functions !!!        !!! IMPORTANT 
 #
 #   Bugs
 #       - no bugs at this moment to fix 
