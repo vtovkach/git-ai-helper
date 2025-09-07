@@ -324,6 +324,11 @@ def commitFiles(commit_all: bool, args: list[str]) -> None:
         for arg in args: 
             if arg[0] == "f":
                 try:
+                    current_file_num = int(arg[1:])
+                    # Rule out 0 as the file number and all negative numbers 
+                    if current_file_num < 1:
+                        print(f"File {current_file_num} does not exist!")
+                        continue
                     file_numbers.append(int(arg[1:]))
                 except (IndexError, TypeError, ValueError):
                     print(f"Error accessing provided file number.")
@@ -385,3 +390,4 @@ if __name__ == "__main__":
 #
 #   Bugs
 #       - fix bug in redo when passing negative file names 
+#
