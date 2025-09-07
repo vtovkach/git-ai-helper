@@ -102,6 +102,7 @@ def main() -> None:
                     if option == "f":
                         try:
                             file_number = args[1][1:]
+                            file_number = int(file_number)
                         except (IndexError, ValueError, TypeError):
                             print("Undefined options in \"{cmd}\" command. Try \"help\"")
                             continue
@@ -118,6 +119,7 @@ def main() -> None:
                     if option == "f":
                         try:
                             file_number = args[1][1:]
+                            file_number = int(file_number)
                         except (IndexError, ValueError, TypeError):
                             print("Undefined options in \"{cmd}\" command. Try \"help\"")
                             continue
@@ -292,7 +294,12 @@ def displayCommitMsg(display_all: bool, file_number: int) -> None:
     return
 
 def redoCommitMsg(reuse_ai: bool, file_number: int) -> None:
-    # Validate provided file_number     
+    # Rule out 0 as the file number and all negative numbers
+    if file_number < 1:
+        print(f"File {file_number} does not exist!")
+        return 
+    
+    # Validate provided file_number 
     try:
         target_file = GitaStaginArea[int(file_number) - 1]
     except (IndexError, ValueError, TypeError) :
@@ -379,7 +386,6 @@ if __name__ == "__main__":
 #   - push commits 
 #
 
-
 # Other things to do 
 #   - Error handling 
 #   - Improve ai prompt for better git commit message       !!! DONE !!!
@@ -387,7 +393,6 @@ if __name__ == "__main__":
 #   - Speed up chatgpt requests 
 #   - Refactor functions 
 #
-#
 #   Bugs
-#       - fix bug in redo when passing negative file names 
+#       - no bugs at this moment to fix 
 #
