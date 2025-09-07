@@ -249,7 +249,7 @@ def getCommitMsg(file: File, isCreative: bool) -> str:
 
 
 def displayCommitMsg(display_all: bool, file_number: int) -> None:
-
+    # Display every file 
     if display_all == True:
         counter = 1
         for file in GitaStaginArea:
@@ -267,6 +267,10 @@ def displayCommitMsg(display_all: bool, file_number: int) -> None:
             counter += 1
 
     else:
+        # Rule out 0 as the file number and all negative numbers 
+        if file_number < 1:
+            print(f"File {file_number} does not exist!")
+            return
         try:
             target_file = GitaStaginArea[int(file_number) - 1]
         except (IndexError, ValueError, TypeError):
@@ -380,4 +384,4 @@ if __name__ == "__main__":
 #
 #
 #   Bugs
-#       - '-f<zero or negative number>'
+#       - fix bug in redo when passing negative file names 
