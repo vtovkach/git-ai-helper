@@ -137,16 +137,26 @@ def main() -> None:
         elif cmd == "commit":
             if len(args) == 0:
                 print("Undefined options in \"{cmd}\" command. Try \"help\"") 
-                continue; 
+                continue
             if len(GitaStaginArea) == 0:
                 print("Staging area is empty. Nothing to commit.")
+                continue
             elif len(args) == 1 and args[0] == "a":
                 commitFiles(True, args)
             else:
                 commitFiles(False, args)
         
         elif cmd == "uncommit":
-            pass 
+            if len(args) == 0:
+                print("Undefined options in \"{cmd}\" command. Try \"help\"")
+                continue
+            if len(committedFiles) == 0:
+                print("There is no committed files at the moment.")
+                continue
+            elif len(args) == 1 and args[0] == "a":
+                uncommitFiles(True, args)
+            else:
+                uncommitFiles(False, args)
 
         elif cmd == "push":
             pass 
@@ -388,6 +398,55 @@ def commitFiles(commit_all: bool, args: list[str]) -> None:
                     print(f"File {file_num} does not exist! Commit failed! ❌")
     return
 
+def uncommitFiles(uncommit_all: bool, args: list[str]) -> None:
+
+    if uncommit_all == True:
+        repo.git.reset("--soft", HEAD_HASH)
+        for file in committedFiles[:]:
+            file.isCommitted = False
+            committedFiles.remove(file)
+    else:
+        file_numbers = []
+        
+        # retrive all file nums from args 
+        for arg in args:
+            if arg[0] == 'f':
+                try:
+                    current_file_num = int(arg[1:])
+                    # Rule out negative numbers including 0 
+                    if current_file_num < 1:
+                        print(f"File {current_file_num} does not exist!")
+                        continue
+                    file_numbers.append(current_file_num)
+                except (IndexError, TypeError, ValueError):
+                    print(f"Error accessing provided file number.")
+                    break
+            else:
+                print("Undefined options in \"commit\" command. Try \"help\"")
+         
+        # uncommit all of the changes 
+        repo.git.reset("--soft", HEAD_HASH)
+        for file in committedFiles[:]:
+            file.isCommited = False
+            committedFiles.remove(file)
+
+        # commit all files back except those to be uncommitted
+        i = 1
+        for file in GitaStaginArea:
+            if i not in file_numbers:
+                repo.git.commit(file.file_path, m=file.commit_msg)
+                file.isCommited = True
+                committedFiles.append(file)
+            i += 1
+
+    return 
+
+def pushCommits() -> None:
+    # Routine to push all committed changes from local repo to host repo
+
+    # git command error GitCommandError
+    pass 
+
 # Run GITA 
 if __name__ == "__main__":
     main()
@@ -404,7 +463,9 @@ if __name__ == "__main__":
 #   - Handle git divergences                                
 #   - Speed up chatgpt requests 
 #   - !!! Refactor functions !!!        !!! IMPORTANT 
+#   - add option to push with token
 #
 #   Bugs
 #       - no bugs at this moment to fix 
+#       - NEED TO TEST LATEST FEATURES !!!
 #
