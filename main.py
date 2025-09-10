@@ -18,13 +18,15 @@ GitaStaginArea = []
 
 committedFiles = []
 
+HEAD_HASH = ""
+
 @dataclass 
 class File:
     file_path:    str
     file_name:    str
     file_diff:    str 
     commit_msg:   str 
-    file_status:  str   # modified, staged, untracked 
+    file_status:  str    # modified, staged, untracked 
     isReady:      bool 
     isCommited:   bool
     isPushed:     bool
@@ -46,7 +48,7 @@ def main() -> None:
     # 
     # uncommit   
     #   -a              -> remove all files 
-    #   -<file #> 
+    #   -<file #>       -> specific commit 
     #
     # !!! Once something is removed redisplay all files
 
@@ -145,6 +147,9 @@ def main() -> None:
         
         elif cmd == "uncommit":
             pass 
+
+        elif cmd == "push":
+            pass 
         
         elif cmd == "clear":
             os.system("clear")
@@ -162,6 +167,11 @@ def main() -> None:
     
 
 def processRepo() -> None:
+    # Global variable 
+    global HEAD_HASH
+
+    # Retrive the hash of the HEAD commit
+    HEAD_HASH = repo.head.commit.hexsha
 
     # Stage all files 
     repo.git.add(A=True)
@@ -354,6 +364,7 @@ def commitFiles(commit_all: bool, args: list[str]) -> None:
                     repo.git.commit(file.file_path, m=file.commit_msg)
                     file.isCommited = True
                     print(f"{file.file_path} has been successfully committed. ✅ done!")
+                    committedFiles.append(file)
                 except Exception as e:
                     print(f"{file.file_path} has not been committed due to error. ❌ failed! ({e})")
     
@@ -372,6 +383,7 @@ def commitFiles(commit_all: bool, args: list[str]) -> None:
                     repo.git.commit(target_file.file_path, m=target_file.commit_msg)
                     target_file.isCommited = True
                     print(f"{target_file.file_path} has been successfully committed. ✅ Done!") 
+                    committedFiles.append(target_file)
                 except IndexError:
                     print(f"File {file_num} does not exist! Commit failed! ❌")
     return
