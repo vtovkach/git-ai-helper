@@ -454,6 +454,7 @@ if __name__ == "__main__":
 
 # Add the following functunality:
 #   - undo commits
+#       - add message about uncommit 
 #   - push commits 
 #
 
