@@ -402,9 +402,9 @@ def uncommitFiles(uncommit_all: bool, args: list[str]) -> None:
 
     if uncommit_all == True:
         repo.git.reset("--soft", HEAD_HASH)
-        for file in committedFiles[:]:
-            file.isCommitted = False
-            committedFiles.remove(file)
+        for file in committedFiles:
+            file.isCommited = False
+        committedFiles.clear()
     else:
         file_numbers = []
         
@@ -426,7 +426,7 @@ def uncommitFiles(uncommit_all: bool, args: list[str]) -> None:
          
         # uncommit all of the changes 
         repo.git.reset("--soft", HEAD_HASH)
-        for file in committedFiles[:]:
+        for file in committedFiles:
             file.isCommited = False
             committedFiles.remove(file)
 
