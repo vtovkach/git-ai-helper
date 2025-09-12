@@ -422,8 +422,8 @@ def uncommitFiles(uncommit_all: bool, args: list[str]) -> None:
                     if current_file_num < 1 or current_file_num > len(GitaStaginArea):
                         print(f"File {current_file_num} does not exist!")
                         continue
-                    if GitaStaginArea[current_file_num].isCommited == False:
-                        print(f"File {GitaStaginArea[current_file_num].file_path} is not committed!")
+                    if GitaStaginArea[current_file_num - 1].isCommited == False:
+                        print(f"File {GitaStaginArea[current_file_num - 1].file_path} is not committed!")
                         continue
                     file_numbers.append(current_file_num)
                 except (IndexError, TypeError, ValueError):
