@@ -34,25 +34,6 @@ class File:
         
 def main() -> None:
 
-    # disp 
-    #   -none       -> display staging area 
-    #   -f<file #>   -> display commit message for the selected file 
-    #   -a          -> display message for every file 
-    #   
-    # redo 
-    #   -cmg -f<file #>      -> use gita to regenerate commit message 
-    #   -cmo -f<file #>      -> enter user's commit message manually 
-    # 
-    # commit 
-    #   -a              -> commit all files 
-    #   -<file #>       -> commit selected file
-    # 
-    # uncommit   
-    #   -a              -> remove all files 
-    #   -<file #>       -> specific commit 
-    #
-    # !!! Once something is removed redisplay all files
-
     print("\n=====================================================")
     print("    Welcome to GITA (Git Assistant Tool)")
     print("")
@@ -457,24 +438,3 @@ def pushCommits() -> None:
 # Run GITA 
 if __name__ == "__main__":
     main()
-
-
-# Add the following functunality:
-#   - undo commits
-#       - add message about uncommit 
-#   - push commits 
-#   
-#   - make status command 
-
-# Other things to do 
-#   - Error handling for openai requests 
-#   - Improve ai prompt for better git commit message     
-#   - Handle git divergences                                
-#   - Speed up chatgpt requests 
-#   - !!! Refactor functions !!!        !!! IMPORTANT 
-#   - add option to push with token
-#
-#   Bugs
-#       - no bugs at this moment to fix 
-#     
-#
