@@ -1,5 +1,5 @@
 
-# disp 
+    # disp 
     #   -none       -> display staging area 
     #   -f<file #>   -> display commit message for the selected file 
     #   -a          -> display message for every file 
