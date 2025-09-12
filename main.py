@@ -132,7 +132,7 @@ def main() -> None:
             if len(args) == 0:
                 print("Undefined options in \"{cmd}\" command. Try \"help\"")
                 continue
-            if CommittedFiles == 0:
+            elif CommittedFiles == 0:
                 print("There is no committed files at the moment.")
                 continue
             elif len(args) == 1 and args[0] == "a":
@@ -141,7 +141,12 @@ def main() -> None:
                 uncommitFiles(False, args)
 
         elif cmd == "push":
-            pass 
+            if len(args) != 0:
+                print("Undefined options in \"{cmd}\" command. Try \"help\"")
+            elif CommittedFiles == 0:
+                print("There is no committed files at the moment.")
+            else:
+                pushCommits()
         
         elif cmd == "clear":
             os.system("clear")
@@ -429,11 +434,27 @@ def uncommitFiles(uncommit_all: bool, args: list[str]) -> None:
                     repo.git.commit(file.file_path, m=file.commit_msg)
     return 
 
-def pushCommits() -> None:
-    # Routine to push all committed changes from local repo to host repo
 
-    # git command error GitCommandError
-    pass 
+def pushCommits() -> None:
+
+    # Push all commits to the remote repo
+    try:
+        origin = repo.remote(name="origin")
+        origin.push()
+    except Exception as e:
+        print("Error happened:", e)
+        return 
+
+    # Push success -> mark pushed files as pushed 
+
+    global GitaStaginArea
+    global CommittedFiles
+
+    for file in GitaStaginArea:
+        if file.isCommited:
+            file.isPushed = True
+            CommittedFiles -= 1
+    return 
 
 # Run GITA 
 if __name__ == "__main__":
