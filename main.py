@@ -16,7 +16,8 @@ repo = git.Repo(".")
 
 GitaStaginArea = []   
 
-committedFiles = []
+# Represent a number of currently committed files 
+CommittedFiles = 0
 
 HEAD_HASH = ""
 
@@ -150,7 +151,7 @@ def main() -> None:
             if len(args) == 0:
                 print("Undefined options in \"{cmd}\" command. Try \"help\"")
                 continue
-            if len(committedFiles) == 0:
+            if CommittedFiles == 0:
                 print("There is no committed files at the moment.")
                 continue
             elif len(args) == 1 and args[0] == "a":
@@ -344,7 +345,7 @@ def redoCommitMsg(reuse_ai: bool, file_number: int) -> None:
 
 
 def commitFiles(commit_all: bool, args: list[str]) -> None:
-
+    global CommittedFiles
     file_numbers = []
 
     if commit_all == False:
@@ -374,7 +375,7 @@ def commitFiles(commit_all: bool, args: list[str]) -> None:
                     repo.git.commit(file.file_path, m=file.commit_msg)
                     file.isCommited = True
                     print(f"{file.file_path} has been successfully committed. ✅ done!")
-                    committedFiles.append(file)
+                    CommittedFiles += 1
                 except Exception as e:
                     print(f"{file.file_path} has not been committed due to error. ❌ failed! ({e})")
     
@@ -393,18 +394,22 @@ def commitFiles(commit_all: bool, args: list[str]) -> None:
                     repo.git.commit(target_file.file_path, m=target_file.commit_msg)
                     target_file.isCommited = True
                     print(f"{target_file.file_path} has been successfully committed. ✅ Done!") 
-                    committedFiles.append(target_file)
+                    CommittedFiles += 1
                 except IndexError:
                     print(f"File {file_num} does not exist! Commit failed! ❌")
     return
 
 def uncommitFiles(uncommit_all: bool, args: list[str]) -> None:
+    global CommittedFiles
+    global GitaStaginArea
 
     if uncommit_all == True:
         repo.git.reset("--soft", HEAD_HASH)
-        for file in committedFiles:
-            file.isCommited = False
-        committedFiles.clear()
+        for file in GitaStaginArea:
+            if file.isCommited:
+                file.isCommited = False
+                print(f"{file.file_path} has been uncommitted. 🟠 Done!")
+                CommittedFiles -= 1
     else:
         file_numbers = []
         
@@ -414,8 +419,11 @@ def uncommitFiles(uncommit_all: bool, args: list[str]) -> None:
                 try:
                     current_file_num = int(arg[1:])
                     # Rule out negative numbers including 0 
-                    if current_file_num < 1:
+                    if current_file_num < 1 or current_file_num > len(GitaStaginArea):
                         print(f"File {current_file_num} does not exist!")
+                        continue
+                    if GitaStaginArea[current_file_num].isCommited == False:
+                        print(f"File {GitaStaginArea[current_file_num].file_path} is not committed!")
                         continue
                     file_numbers.append(current_file_num)
                 except (IndexError, TypeError, ValueError):
@@ -423,22 +431,21 @@ def uncommitFiles(uncommit_all: bool, args: list[str]) -> None:
                     break
             else:
                 print("Undefined options in \"commit\" command. Try \"help\"")
-         
-        # uncommit all of the changes 
-        repo.git.reset("--soft", HEAD_HASH)
-        for file in committedFiles:
-            file.isCommited = False
-            committedFiles.remove(file)
 
-        # commit all files back except those to be uncommitted
-        i = 1
-        for file in GitaStaginArea:
-            if i not in file_numbers:
-                repo.git.commit(file.file_path, m=file.commit_msg)
-                file.isCommited = True
-                committedFiles.append(file)
-            i += 1
+        # If file_numbers list is not empty then there is at least one specific file to be uncommitted
+        if file_numbers:
+            # uncommit all of the changes 
+            repo.git.reset("--soft", HEAD_HASH)
+            for i in range(len(GitaStaginArea)):
+                if (i+1) in file_numbers:
+                    GitaStaginArea[i].isCommited = False
+                    CommittedFiles -= 1
+                    print(f"{GitaStaginArea[i].file_path} has been uncommitted. 🟠 Done!")
 
+            # commit all files back except those to be uncommitted
+            for file in GitaStaginArea:
+                if file.isCommited:
+                    repo.git.commit(file.file_path, m=file.commit_msg)
     return 
 
 def pushCommits() -> None:
@@ -456,7 +463,8 @@ if __name__ == "__main__":
 #   - undo commits
 #       - add message about uncommit 
 #   - push commits 
-#
+#   
+#   - make status command 
 
 # Other things to do 
 #   - Error handling for openai requests 
@@ -468,5 +476,5 @@ if __name__ == "__main__":
 #
 #   Bugs
 #       - no bugs at this moment to fix 
-#       - NEED TO TEST LATEST FEATURES !!!
+#     
 #
