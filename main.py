@@ -30,7 +30,6 @@ class File:
     file_status:  str    # modified, staged, untracked 
     isReady:      bool 
     isCommited:   bool
-    isPushed:     bool
         
 def main() -> None:
 
@@ -140,14 +139,6 @@ def main() -> None:
             else:
                 uncommitFiles(False, args)
 
-        elif cmd == "push":
-            if len(args) != 0:
-                print("Undefined options in \"{cmd}\" command. Try \"help\"")
-            elif CommittedFiles == 0:
-                print("There is no committed files at the moment.")
-            else:
-                pushCommits()
-        
         elif cmd == "clear":
             os.system("clear")
         
@@ -189,7 +180,6 @@ def processRepo() -> None:
             file_status = status_code,
             isReady = True,
             isCommited = False,
-            isPushed = False 
         )
 
         temp_file.commit_msg = getCommitMsg(temp_file, False)
@@ -202,24 +192,22 @@ def displayInitArea() -> None:
     # Print header
     print(
         Fore.BLUE +
-        f"\n{'No.':<4} │ {'Code':<7} │ {'File Path':<30} │ {'Ready to Commit':<20} │ {'Committed':<12} │ {'Pushed':<8}"
+        f"\n{'No.':<4} │ {'Code':<7} │ {'File Path':<30} │ {'Ready to Commit':<20} │ {'Committed':<12} |"
         + Style.RESET_ALL
     )
-    print("-" * 95)  # separator line
+    print("-" * 87)  # separator line
 
     counter = 1
     for file in GitaStaginArea:
         ready    = f"{Fore.GREEN}{'True':^20}{Style.RESET_ALL}" if file.isReady    else f"{Fore.RED}{'False':^20}{Style.RESET_ALL}"
         commited = f"{Fore.GREEN}{'True':^12}{Style.RESET_ALL}" if file.isCommited else f"{Fore.RED}{'False':^12}{Style.RESET_ALL}"
-        pushed   = f"{Fore.GREEN}{'True':^8}{Style.RESET_ALL}"  if file.isPushed   else f"{Fore.RED}{'False':^8}{Style.RESET_ALL}"
-
+        
         print(
             f"{counter:<4} │ "
             f"{file.file_status:<7} │ "
             f"{file.file_path:<30} │ "
             f"{ready} │ "
             f"{commited} │ "
-            f"{pushed}"
             "\n"
         )
         counter += 1
@@ -392,7 +380,7 @@ def uncommitFiles(uncommit_all: bool, args: list[str]) -> None:
     if uncommit_all == True:
         repo.git.reset("--soft", HEAD_HASH)
         for file in GitaStaginArea:
-            if file.isCommited and file.isPushed == False:
+            if file.isCommited:
                 file.isCommited = False
                 print(f"{file.file_path} has been uncommitted. 🟠 Done!")
                 CommittedFiles -= 1
@@ -410,9 +398,6 @@ def uncommitFiles(uncommit_all: bool, args: list[str]) -> None:
                         continue
                     if GitaStaginArea[current_file_num - 1].isCommited == False:
                         print(f"File {GitaStaginArea[current_file_num - 1].file_path} is not committed!")
-                        continue
-                    if GitaStaginArea[current_file_num - 1].isPushed == True:
-                        print(f"File {GitaStaginArea[current_file_num - 1].file_path} has been already pushed to remote repo!")
                         continue
                     file_numbers.append(current_file_num)
                 except (IndexError, TypeError, ValueError):
@@ -435,28 +420,6 @@ def uncommitFiles(uncommit_all: bool, args: list[str]) -> None:
             for file in GitaStaginArea:
                 if file.isCommited:
                     repo.git.commit(file.file_path, m=file.commit_msg)
-    return 
-
-
-def pushCommits() -> None:
-
-    # Push all commits to the remote repo
-    try:
-        origin = repo.remote(name="origin")
-        origin.push()
-    except Exception as e:
-        print("Error happened:", e)
-        return 
-
-    # Push success -> mark pushed files as pushed 
-
-    global GitaStaginArea
-    global CommittedFiles
-
-    for file in GitaStaginArea:
-        if file.isCommited:
-            file.isPushed = True
-            CommittedFiles -= 1
     return 
 
 # Run GITA 
