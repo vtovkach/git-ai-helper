@@ -21,6 +21,14 @@ CommittedFiles = 0
 
 HEAD_HASH = ""
 
+AI_MODEL = ""
+with open("config/ai_model", "r", encoding="utf-8") as f:
+    AI_MODEL = f.readline().strip()
+
+AI_PROMPT = ""
+with open("config/ai_prompt", "r", encoding="utf-8") as f:
+    AI_PROMPT = f.read()
+
 @dataclass 
 class File:
     file_path:    str
@@ -216,7 +224,7 @@ def displayInitArea() -> None:
 
 def getDiff(filepath: str) -> str:
     # get file changes with 5 context lines  
-    diff = repo.git.diff("--cached", "-U2", filepath)
+    diff = repo.git.diff("--cached", "-U3", filepath)
 
     return diff 
 
