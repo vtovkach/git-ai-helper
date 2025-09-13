@@ -1,1 +1,1 @@
-Place the file with your openAi api key in this directory.
+Place the file containing your OpenAI API key in this directory.
