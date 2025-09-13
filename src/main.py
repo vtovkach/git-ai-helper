@@ -21,6 +21,14 @@ CommittedFiles = 0
 
 HEAD_HASH = ""
 
+AI_MODEL = ""
+with open("config/ai_model", "r", encoding="utf-8") as f:
+    AI_MODEL = f.readline().strip()
+
+AI_PROMPT = ""
+with open("config/ai_prompt", "r", encoding="utf-8") as f:
+    AI_PROMPT = f.read()
+
 @dataclass 
 class File:
     file_path:    str
@@ -54,10 +62,13 @@ def main() -> None:
         cmd = parts[0]
         args = [arg.lstrip("-") for arg in parts[1:]]
 
-        if cmd == "disp":
+        if cmd == "status":
             if len(args) == 0:
                 displayInitArea()
-            elif len(args) == 1:
+            else:
+                print("Undefined options in \"{cmd}\" command. Try \"help\"") 
+        elif cmd == "disp":
+            if len(args) == 1:
                 if args[0] == "a":
                     # display commit message for every file 
                     displayCommitMsg(True, -1)
@@ -74,7 +85,7 @@ def main() -> None:
             else:
                 print("Undefined options in \"{cmd}\" command. Try \"help\"") 
                 
-        elif cmd == "redo":
+        elif cmd == "change":
             if len(args) == 2:
                 if args[0] == "cmg":
                     try:
@@ -216,7 +227,7 @@ def displayInitArea() -> None:
 
 def getDiff(filepath: str) -> str:
     # get file changes with 5 context lines  
-    diff = repo.git.diff("--cached", "-U2", filepath)
+    diff = repo.git.diff("--cached", "-U3", filepath)
 
     return diff 
 
@@ -224,18 +235,11 @@ def getCommitMsg(file: File, isCreative: bool) -> str:
     temperature = 0 if not isCreative else 1.5
 
     commit_msg = client.chat.completions.create(
-        model="gpt-4.1-nano",
+        model= AI_MODEL,
         messages=[
             {
                 "role": "system",
-                "content": (
-                    "Analyze the Git repo diff provided by the user, then generate a commit message with Subject Line and specific body paragraph \n"
-                    "Requirements:\n"
-                    "- Subject line: ≤40 characters, concise\n"
-                    "- Body: ≤100 characters total \n"
-                    "- Message must be clear and very specific \n"
-                    "- Format body as a dash list with separate ideas, use new lines so it looks nice"
-                ),
+                "content": AI_PROMPT
             },
             {"role": "user", "content": file.file_diff},
         ],

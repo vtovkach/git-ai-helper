@@ -1,0 +1,6 @@
+Analyze the Git repo diff provided by the user, then generate a commit message with Subject Line and specific body paragraph
+Requirements:
+    - Subject line: ≤40 characters, concise
+    - Body: ≤100 characters total
+    - Message must be clear and very specific
+    - Format body as a dash list with separate ideas, use new lines so it looks nice
