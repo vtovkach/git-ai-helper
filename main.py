@@ -392,7 +392,7 @@ def uncommitFiles(uncommit_all: bool, args: list[str]) -> None:
     if uncommit_all == True:
         repo.git.reset("--soft", HEAD_HASH)
         for file in GitaStaginArea:
-            if file.isCommited:
+            if file.isCommited and file.isPushed == False:
                 file.isCommited = False
                 print(f"{file.file_path} has been uncommitted. 🟠 Done!")
                 CommittedFiles -= 1
@@ -411,6 +411,9 @@ def uncommitFiles(uncommit_all: bool, args: list[str]) -> None:
                     if GitaStaginArea[current_file_num - 1].isCommited == False:
                         print(f"File {GitaStaginArea[current_file_num - 1].file_path} is not committed!")
                         continue
+                    if GitaStaginArea[current_file_num - 1].isPushed == True:
+                        print(f"File {GitaStaginArea[current_file_num - 1].file_path} has been already pushed to remote repo!")
+                        continue
                     file_numbers.append(current_file_num)
                 except (IndexError, TypeError, ValueError):
                     print(f"Error accessing provided file number.")
@@ -427,7 +430,7 @@ def uncommitFiles(uncommit_all: bool, args: list[str]) -> None:
                     GitaStaginArea[i].isCommited = False
                     CommittedFiles -= 1
                     print(f"{GitaStaginArea[i].file_path} has been uncommitted. 🟠 Done!")
-
+        
             # commit all files back except those to be uncommitted
             for file in GitaStaginArea:
                 if file.isCommited:
