@@ -62,10 +62,13 @@ def main() -> None:
         cmd = parts[0]
         args = [arg.lstrip("-") for arg in parts[1:]]
 
-        if cmd == "disp":
+        if cmd == "status":
             if len(args) == 0:
                 displayInitArea()
-            elif len(args) == 1:
+            else:
+                print("Undefined options in \"{cmd}\" command. Try \"help\"") 
+        elif cmd == "disp":
+            if len(args) == 1:
                 if args[0] == "a":
                     # display commit message for every file 
                     displayCommitMsg(True, -1)
@@ -82,7 +85,7 @@ def main() -> None:
             else:
                 print("Undefined options in \"{cmd}\" command. Try \"help\"") 
                 
-        elif cmd == "redo":
+        elif cmd == "change":
             if len(args) == 2:
                 if args[0] == "cmg":
                     try:
