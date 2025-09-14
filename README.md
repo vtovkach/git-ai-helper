@@ -1,17 +1,22 @@
 # AI-Powered Git Assistant
+A lightweight AI-integrated Git helper tool for developers. It can automatically generate commit messages using the OpenAI API and lets you commit only the changes you need with clear messages.
 
 ## Project Status
 This project is **still in the development stage**.
 
 ---
 
-## Commands
+## Available Commands
 
 ### status  
-Display staging area and commit messages.  
-- `status -none` → Display staging area  
-- `status -f<file #>` → Display commit message for the selected file  
-- `status -a` → Display message for every file  
+Display staging area.
+- `status -none` → Display staging area
+
+---
+### disp 
+Display commit messages.
+- `disp -f<file #>` → Display commit message for the selected file  
+- `disp -a` → Display message for every file  
 
 ---
 
