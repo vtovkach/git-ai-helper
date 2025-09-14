@@ -1,8 +1,5 @@
-# AI-Powered Git Assistant
+# AI-Powered Git Assistant (**In Development**)
 A lightweight AI-integrated Git helper tool for developers. It can automatically generate commit messages using the OpenAI API and lets you commit only the changes you need with clear messages.
-
-## Project Status
-This project is **still in the development stage**.
 
 ---
 
