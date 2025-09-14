@@ -1,4 +1,6 @@
-# Project Status
+# AI-Powered Git Assistant
+
+## Project Status
 This project is **still in the development stage**.
 
 ---
