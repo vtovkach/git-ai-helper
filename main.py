@@ -1,12 +1,18 @@
 from openai import OpenAI, AsyncOpenAI 
 from colorama import Fore, Style
 from dataclasses import dataclass
+import subprocess
 import os 
 import git 
+import sys
 
 # retrive Openai API Key from the file  
-with open("OpenAi/api_key", "r") as f:
-    api_key = f.read().strip()
+try:
+    with open("OpenAi/api_key", "r") as f:
+        api_key = f.read().strip()
+except:
+    print("API Key could not be loaded.")
+    sys.exit()
 
 # Initialize OpenAi client with the key 
 client = OpenAI(api_key=api_key)
@@ -22,12 +28,20 @@ CommittedFiles = 0
 HEAD_HASH = ""
 
 AI_MODEL = ""
-with open("config/ai_model", "r", encoding="utf-8") as f:
-    AI_MODEL = f.readline().strip()
+try:
+    with open("config/ai_model", "r", encoding="utf-8") as f:
+        AI_MODEL = f.readline().strip()
+except:
+    print("AI Model could not be found in \"config/ai_model\".")
+    sys.exit()
 
 AI_PROMPT = ""
-with open("config/ai_prompt", "r", encoding="utf-8") as f:
-    AI_PROMPT = f.read()
+try:
+    with open("config/ai_prompt", "r", encoding="utf-8") as f:
+        AI_PROMPT = f.read()
+except:
+    print("AI Prompt could not be found in \"config/ai_prompt\".")
+    sys.exit()
 
 @dataclass 
 class File:
@@ -40,6 +54,12 @@ class File:
     isCommited:   bool
         
 def main() -> None:
+    
+    if inside_git_repo():
+        print("I am inside git repo!")
+    else:
+        print("I am not insdie git repo!")
+        return 
 
     print("\n=====================================================")
     print("    Welcome to GITA (Git Assistant Tool)")
@@ -163,6 +183,18 @@ def main() -> None:
             continue
 
     return 0
+
+def inside_git_repo() -> bool:
+    try:
+        subprocess.run(
+            ["git", "rev-parse", "--is-inside-work-tree"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=True
+        )
+        return True
+    except subprocess.CalledProcessError:
+        return False
     
 
 def processRepo() -> None:
