@@ -400,6 +400,9 @@ def commitFiles(commit_all: bool, args: list[str]) -> None:
             if file.isCommited:
                 print(f"File {file.file_path} is already committed.")
                 continue
+            elif file.isReady == False:
+                print(f"File {file.file_path} is not ready to be committed. ❌")
+                continue
             else:
                 try:
                     # Comment for now 
@@ -419,6 +422,9 @@ def commitFiles(commit_all: bool, args: list[str]) -> None:
                 continue
             if target_file.isCommited:
                 print(f"File {target_file.file_path} is already committed.")
+                continue
+            elif target_file.isReady == False:
+                print(f"File {target_file.file_path} is not ready to be committed. ❌")
                 continue
             else:
                 try:
@@ -478,7 +484,7 @@ def uncommitFiles(uncommit_all: bool, args: list[str]) -> None:
                 if file.isCommited:
                     repo.git.commit(file.file_path, m=file.commit_msg)
     return 
-
+    
 # Run GITA 
 if __name__ == "__main__":
     main()
