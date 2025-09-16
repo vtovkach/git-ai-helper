@@ -6,6 +6,23 @@ import os
 import git 
 import sys
 
+# Function to test if gita is opened within repo or not 
+def inside_git_repo() -> bool:
+    try:
+        subprocess.run(
+            ["git", "rev-parse", "--is-inside-work-tree"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=True
+        )
+        return True
+    except subprocess.CalledProcessError:
+        return False
+
+if inside_git_repo() == False:
+    print("I am not insdie git repo! Terminating!")
+    sys.exit()
+
 # retrive Openai API Key from the file  
 try:
     with open("OpenAi/api_key", "r") as f:
@@ -54,12 +71,6 @@ class File:
     isCommited:   bool
         
 def main() -> None:
-    
-    if inside_git_repo():
-        print("I am inside git repo!")
-    else:
-        print("I am not insdie git repo!")
-        return 
 
     print("\n=====================================================")
     print("    Welcome to GITA (Git Assistant Tool)")
@@ -184,19 +195,6 @@ def main() -> None:
 
     return 0
 
-def inside_git_repo() -> bool:
-    try:
-        subprocess.run(
-            ["git", "rev-parse", "--is-inside-work-tree"],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            check=True
-        )
-        return True
-    except subprocess.CalledProcessError:
-        return False
-    
-
 def processRepo() -> None:
     # Global variable 
     global HEAD_HASH
@@ -226,7 +224,9 @@ def processRepo() -> None:
         )
 
         temp_file.commit_msg = getCommitMsg(temp_file, False)
-
+        if temp_file.commit_msg == "" or temp_file.file_diff == "":
+            temp_file.isReady = False
+            
         GitaStaginArea.append(temp_file)
 
     return None; 
@@ -259,27 +259,39 @@ def displayInitArea() -> None:
 
 def getDiff(filepath: str) -> str:
     # get file changes with 5 context lines  
-    diff = repo.git.diff("--cached", "-U3", filepath)
-
+    try:
+        diff = repo.git.diff("--cached", "-U3", filepath)
+    except Exception as e:
+        print(f"Error retrieving diff for '{filepath}. Exception: {e}.")
+        return ""
     return diff 
 
 def getCommitMsg(file: File, isCreative: bool) -> str:
     temperature = 0 if not isCreative else 1.5
+    try:
+        commit_msg = client.chat.completions.create(
+            model= AI_MODEL,
+            messages=[
+                {
+                    "role": "system",
+                    "content": AI_PROMPT
+                },
+                {"role": "user", "content": file.file_diff},
+            ],
+            temperature=temperature,
+        )
+    except Exception as e:
+        print(f"Error generating commit message for '{file.file_path}. Exception: {e}.")
+        return ""
 
-    commit_msg = client.chat.completions.create(
-        model= AI_MODEL,
-        messages=[
-            {
-                "role": "system",
-                "content": AI_PROMPT
-            },
-            {"role": "user", "content": file.file_diff},
-        ],
-        temperature=temperature,
-    )
+    result = ""
+    try:
+        result = commit_msg.choices[0].message.content.strip()
+    except Exception as e:
+        print(f"Error generating commit message for '{file.file_path}. Exception: {e}.")
+        return ""
 
-    return commit_msg.choices[0].message.content.strip()
-
+    return result 
 
 def displayCommitMsg(display_all: bool, file_number: int) -> None:
     # Display every file 
