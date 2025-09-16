@@ -1,12 +1,35 @@
 from openai import OpenAI, AsyncOpenAI 
 from colorama import Fore, Style
 from dataclasses import dataclass
+import subprocess
 import os 
 import git 
+import sys
+
+# Function to test if gita is opened within repo or not 
+def inside_git_repo() -> bool:
+    try:
+        subprocess.run(
+            ["git", "rev-parse", "--is-inside-work-tree"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=True
+        )
+        return True
+    except subprocess.CalledProcessError:
+        return False
+
+if inside_git_repo() == False:
+    print("I am not insdie git repo! Terminating!")
+    sys.exit()
 
 # retrive Openai API Key from the file  
-with open("OpenAi/api_key", "r") as f:
-    api_key = f.read().strip()
+try:
+    with open("OpenAi/api_key", "r") as f:
+        api_key = f.read().strip()
+except:
+    print("API Key could not be loaded.")
+    sys.exit()
 
 # Initialize OpenAi client with the key 
 client = OpenAI(api_key=api_key)
@@ -20,6 +43,22 @@ GitaStaginArea = []
 CommittedFiles = 0
 
 HEAD_HASH = ""
+
+AI_MODEL = ""
+try:
+    with open("config/ai_model", "r", encoding="utf-8") as f:
+        AI_MODEL = f.readline().strip()
+except:
+    print("AI Model could not be found in \"config/ai_model\".")
+    sys.exit()
+
+AI_PROMPT = ""
+try:
+    with open("config/ai_prompt", "r", encoding="utf-8") as f:
+        AI_PROMPT = f.read()
+except:
+    print("AI Prompt could not be found in \"config/ai_prompt\".")
+    sys.exit()
 
 @dataclass 
 class File:
@@ -54,10 +93,13 @@ def main() -> None:
         cmd = parts[0]
         args = [arg.lstrip("-") for arg in parts[1:]]
 
-        if cmd == "disp":
+        if cmd == "status":
             if len(args) == 0:
                 displayInitArea()
-            elif len(args) == 1:
+            else:
+                print("Undefined options in \"{cmd}\" command. Try \"help\"") 
+        elif cmd == "disp":
+            if len(args) == 1:
                 if args[0] == "a":
                     # display commit message for every file 
                     displayCommitMsg(True, -1)
@@ -74,7 +116,7 @@ def main() -> None:
             else:
                 print("Undefined options in \"{cmd}\" command. Try \"help\"") 
                 
-        elif cmd == "redo":
+        elif cmd == "change":
             if len(args) == 2:
                 if args[0] == "cmg":
                     try:
@@ -152,7 +194,6 @@ def main() -> None:
             continue
 
     return 0
-    
 
 def processRepo() -> None:
     # Global variable 
@@ -183,7 +224,9 @@ def processRepo() -> None:
         )
 
         temp_file.commit_msg = getCommitMsg(temp_file, False)
-
+        if temp_file.commit_msg == "" or temp_file.file_diff == "":
+            temp_file.isReady = False
+            
         GitaStaginArea.append(temp_file)
 
     return None; 
@@ -216,34 +259,39 @@ def displayInitArea() -> None:
 
 def getDiff(filepath: str) -> str:
     # get file changes with 5 context lines  
-    diff = repo.git.diff("--cached", "-U2", filepath)
-
+    try:
+        diff = repo.git.diff("--cached", "-U3", filepath)
+    except Exception as e:
+        print(f"Error retrieving diff for '{filepath}. Exception: {e}.")
+        return ""
     return diff 
 
 def getCommitMsg(file: File, isCreative: bool) -> str:
     temperature = 0 if not isCreative else 1.5
+    try:
+        commit_msg = client.chat.completions.create(
+            model= AI_MODEL,
+            messages=[
+                {
+                    "role": "system",
+                    "content": AI_PROMPT
+                },
+                {"role": "user", "content": file.file_diff},
+            ],
+            temperature=temperature,
+        )
+    except Exception as e:
+        print(f"Error generating commit message for '{file.file_path}. Exception: {e}.")
+        return ""
 
-    commit_msg = client.chat.completions.create(
-        model="gpt-4.1-nano",
-        messages=[
-            {
-                "role": "system",
-                "content": (
-                    "Analyze the Git repo diff provided by the user, then generate a commit message with Subject Line and specific body paragraph \n"
-                    "Requirements:\n"
-                    "- Subject line: ≤40 characters, concise\n"
-                    "- Body: ≤100 characters total \n"
-                    "- Message must be clear and very specific \n"
-                    "- Format body as a dash list with separate ideas, use new lines so it looks nice"
-                ),
-            },
-            {"role": "user", "content": file.file_diff},
-        ],
-        temperature=temperature,
-    )
+    result = ""
+    try:
+        result = commit_msg.choices[0].message.content.strip()
+    except Exception as e:
+        print(f"Error generating commit message for '{file.file_path}. Exception: {e}.")
+        return ""
 
-    return commit_msg.choices[0].message.content.strip()
-
+    return result 
 
 def displayCommitMsg(display_all: bool, file_number: int) -> None:
     # Display every file 
@@ -259,10 +307,12 @@ def displayCommitMsg(display_all: bool, file_number: int) -> None:
             )
             print(header)
             # Commit message in bright green
-            print(Fore.GREEN + file.commit_msg + Style.RESET_ALL + "\n")
-
+            if file.isReady == False:
+                print(Fore.GREEN + "File does not have a commit message, as it is not ready to be committed." + Style.RESET_ALL + "\n")
+            else:
+                print(Fore.GREEN + file.commit_msg + Style.RESET_ALL + "\n")
             counter += 1
-
+    
     else:
         # Rule out 0 as the file number and all negative numbers 
         if file_number < 1:
@@ -284,7 +334,10 @@ def displayCommitMsg(display_all: bool, file_number: int) -> None:
         print(header)
 
         # Commit message in bright green
-        print(Fore.GREEN + target_file.commit_msg + Style.RESET_ALL + "\n")
+        if target_file.isReady == False:
+            print(Fore.GREEN + "File does not have a commit message, as it is not ready to be committed." + Style.RESET_ALL + "\n") 
+        else:
+            print(Fore.GREEN + target_file.commit_msg + Style.RESET_ALL + "\n")
 
     return
 
@@ -304,7 +357,12 @@ def redoCommitMsg(reuse_ai: bool, file_number: int) -> None:
     # Determine whether to regenerate message with openai gpt or provide own message 
     if(reuse_ai):
         while True:
-            target_file.commit_msg = getCommitMsg(target_file, True)
+            new_commit_msg = getCommitMsg(target_file, True)
+            if new_commit_msg == "":
+                print("Error regenerating commit message. Keeping the old one.")
+                return
+            # Update commit message 
+            target_file.commit_msg = new_commit_msg
             displayCommitMsg(False, file_number)
             user_input = input("Would you like to save this commit message?(y/n)")
             if user_input.lower() == "y":
@@ -316,7 +374,6 @@ def redoCommitMsg(reuse_ai: bool, file_number: int) -> None:
         print("Commit message has been successfully updated!\n")
 
     return
-
 
 def commitFiles(commit_all: bool, args: list[str]) -> None:
     global CommittedFiles
@@ -343,6 +400,9 @@ def commitFiles(commit_all: bool, args: list[str]) -> None:
             if file.isCommited:
                 print(f"File {file.file_path} is already committed.")
                 continue
+            elif file.isReady == False:
+                print(f"File {file.file_path} is not ready to be committed. ❌")
+                continue
             else:
                 try:
                     # Comment for now 
@@ -362,6 +422,9 @@ def commitFiles(commit_all: bool, args: list[str]) -> None:
                 continue
             if target_file.isCommited:
                 print(f"File {target_file.file_path} is already committed.")
+                continue
+            elif target_file.isReady == False:
+                print(f"File {target_file.file_path} is not ready to be committed. ❌")
                 continue
             else:
                 try:
@@ -421,7 +484,7 @@ def uncommitFiles(uncommit_all: bool, args: list[str]) -> None:
                 if file.isCommited:
                     repo.git.commit(file.file_path, m=file.commit_msg)
     return 
-
+    
 # Run GITA 
 if __name__ == "__main__":
     main()
