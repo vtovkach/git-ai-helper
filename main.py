@@ -307,10 +307,12 @@ def displayCommitMsg(display_all: bool, file_number: int) -> None:
             )
             print(header)
             # Commit message in bright green
-            print(Fore.GREEN + file.commit_msg + Style.RESET_ALL + "\n")
-
+            if file.isReady == False:
+                print(Fore.GREEN + "File does not have a commit message, as it is not ready to be committed." + Style.RESET_ALL + "\n")
+            else:
+                print(Fore.GREEN + file.commit_msg + Style.RESET_ALL + "\n")
             counter += 1
-
+    
     else:
         # Rule out 0 as the file number and all negative numbers 
         if file_number < 1:
@@ -332,7 +334,10 @@ def displayCommitMsg(display_all: bool, file_number: int) -> None:
         print(header)
 
         # Commit message in bright green
-        print(Fore.GREEN + target_file.commit_msg + Style.RESET_ALL + "\n")
+        if target_file.isReady == False:
+            print(Fore.GREEN + "File does not have a commit message, as it is not ready to be committed." + Style.RESET_ALL + "\n") 
+        else:
+            print(Fore.GREEN + target_file.commit_msg + Style.RESET_ALL + "\n")
 
     return
 
@@ -352,7 +357,12 @@ def redoCommitMsg(reuse_ai: bool, file_number: int) -> None:
     # Determine whether to regenerate message with openai gpt or provide own message 
     if(reuse_ai):
         while True:
-            target_file.commit_msg = getCommitMsg(target_file, True)
+            new_commit_msg = getCommitMsg(target_file, True)
+            if new_commit_msg == "":
+                print("Error regenerating commit message. Keeping the old one.")
+                return
+            # Update commit message 
+            target_file.commit_msg = new_commit_msg
             displayCommitMsg(False, file_number)
             user_input = input("Would you like to save this commit message?(y/n)")
             if user_input.lower() == "y":
@@ -364,7 +374,6 @@ def redoCommitMsg(reuse_ai: bool, file_number: int) -> None:
         print("Commit message has been successfully updated!\n")
 
     return
-
 
 def commitFiles(commit_all: bool, args: list[str]) -> None:
     global CommittedFiles
