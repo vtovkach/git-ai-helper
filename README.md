@@ -40,7 +40,7 @@ Remove files from commit.
 
 ## Installation
 
-1. Go to the **Projects** section where the tool is hosted.  
+1. Go to the **Releases** section where the tool is hosted.  
 2. **Download** the archive file for gita.  
 3. Once downloaded, **unzip** the archive.  
 4. Run the installer:  
