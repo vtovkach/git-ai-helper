@@ -35,3 +35,26 @@ Commit files to the repository.
 Remove files from commit.  
 - `uncommit -a` → Remove all files  
 - `uncommit -<file #>` → Remove a specific commit 
+
+---
+
+## Installation
+
+1. Go to the **Releases** section where the tool is hosted.  
+2. **Download** the archive file for gita.  
+3. Once downloaded, **unzip** the archive.  
+4. Run the installer:  
+   ```bash
+   ./install.sh
+   ```
+5. After installation, you may safely remove the downloaded archive and the unzipped folder.  
+
+---
+
+## Usage
+
+Once installed, you can launch the tool by typing:
+
+```bash
+gita
+```
