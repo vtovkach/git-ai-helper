@@ -1,4 +1,4 @@
-# AI-Powered Git Assistant (**In Development**)
+# AI-Powered Git Assistant
 A lightweight AI-integrated Git helper tool for developers. It can automatically generate commit messages using the OpenAI API and lets you commit only the changes you need with clear messages.
 
 ---
@@ -43,11 +43,14 @@ Remove files from commit.
 1. Go to the **Releases** section where the tool is hosted.  
 2. **Download** the archive file for gita.  
 3. Once downloaded, **unzip** the archive.  
-4. Run the installer:  
+4. Make the installer executable:  
+   ```bash
+   chmod +x install.sh
+5. Run the installer:  
    ```bash
    ./install.sh
    ```
-5. After installation, you may safely remove the downloaded archive and the unzipped folder.  
+6. After installation, you may safely remove the downloaded archive and the unzipped folder.  
 
 ---
 
