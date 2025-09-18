@@ -38,7 +38,7 @@ Remove files from commit.
 
 ---
 
-## Installation
+## Installation (Linux Only)
 
 1. Go to the **Releases** section where the tool is hosted.  
 2. **Download** the archive file for gita.  
