@@ -25,7 +25,7 @@ if inside_git_repo() == False:
 
 # retrive Openai API Key from the file  
 try:
-    with open("OpenAi/api_key", "r") as f:
+    with open("/usr/local/gita/OpenAi/api_key", "r") as f:
         api_key = f.read().strip()
 except:
     print("API Key could not be loaded.")
@@ -46,7 +46,7 @@ HEAD_HASH = ""
 
 AI_MODEL = ""
 try:
-    with open("config/ai_model", "r", encoding="utf-8") as f:
+    with open("/usr/local/gita/config/ai_model", "r", encoding="utf-8") as f:
         AI_MODEL = f.readline().strip()
 except:
     print("AI Model could not be found in \"config/ai_model\".")
@@ -54,7 +54,7 @@ except:
 
 AI_PROMPT = ""
 try:
-    with open("config/ai_prompt", "r", encoding="utf-8") as f:
+    with open("/usr/local/gita/config/ai_prompt", "r", encoding="utf-8") as f:
         AI_PROMPT = f.read()
 except:
     print("AI Prompt could not be found in \"config/ai_prompt\".")
